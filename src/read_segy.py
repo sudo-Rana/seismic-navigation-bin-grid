@@ -2,10 +2,17 @@ import segyio
 import pandas as pd
 
 
+def apply_scalar(value, scalar):
+    if scalar == 0 or scalar is None:
+        return value
+    if scalar > 0:
+        return value * scalar
+    return value / abs(scalar)
+
+
 def read_segy_navigation(segy_file):
     """
-    Read seismic navigation from SEG-Y headers
-    Returns a DataFrame with source, receiver, and CMP coordinates
+    Read seismic navigation from SEG-Y headers with scalar handling
     """
     records = []
 
@@ -13,20 +20,21 @@ def read_segy_navigation(segy_file):
         for tr in range(f.tracecount):
             hdr = f.header[tr]
 
-            sx = hdr.get(segyio.TraceField.SourceX, None)
-            sy = hdr.get(segyio.TraceField.SourceY, None)
-            gx = hdr.get(segyio.TraceField.GroupX, None)
-            gy = hdr.get(segyio.TraceField.GroupY, None)
+            scalar = hdr.get(segyio.TraceField.SourceGroupScalar, 1)
+
+            sx = hdr.get(segyio.TraceField.SourceX)
+            sy = hdr.get(segyio.TraceField.SourceY)
+            gx = hdr.get(segyio.TraceField.GroupX)
+            gy = hdr.get(segyio.TraceField.GroupY)
 
             if None in (sx, sy, gx, gy):
                 continue
 
             records.append({
-                "SX": sx,
-                "SY": sy,
-                "GX": gx,
-                "GY": gy
+                "SX": apply_scalar(sx, scalar),
+                "SY": apply_scalar(sy, scalar),
+                "GX": apply_scalar(gx, scalar),
+                "GY": apply_scalar(gy, scalar)
             })
 
-    df = pd.DataFrame(records)
-    return df
+    return pd.DataFrame(records)
