@@ -1,0 +1,8 @@
+numpy
+pandas
+segyio
+pyproj
+geopandas
+matplotlib
+plotly
+scikit-learn
